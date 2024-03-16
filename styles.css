@@ -1,6 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #000;
+    color: #fff; /* 文字色を白に設定 */
 }
 
 .login-container {
@@ -25,6 +26,7 @@ button {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    color: #000; /* 入力欄やボタンの文字色を黒に設定 */
 }
 
 button {
