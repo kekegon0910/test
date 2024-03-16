@@ -18,8 +18,8 @@ body {
     text-align: center;
 }
 
-h2 {
-    color: #000; /* h2の文字色を黒に設定 */
+.login-text {
+    color: #000; /* loginの文字色を黒に設定 */
 }
 
 input[type="text"],
