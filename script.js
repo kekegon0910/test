@@ -8,7 +8,7 @@ document.getElementById("login-form").addEventListener("submit", function(event)
     if (username === "admin" && password === "password") {
         document.getElementById("message").textContent = "Login successful";
         setTimeout(function() {
-            window.location.href = "welcome.html"; // 2秒後にwelcome.htmlに遷移
+            window.location.href = "game.html"; // 2秒後にwelcome.htmlに遷移
         }, 2000);
     } else {
         document.getElementById("message").textContent = "Invalid username or password";
