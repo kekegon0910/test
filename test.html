@@ -1,21 +1,60 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>奥に進むアニメーション</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 10%;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-<div id="login-container">
-    <form id="login-form">
-        <h2>Login</h2>
-        <input type="text" placeholder="Username" id="username">
-        <input type="password" placeholder="Password" id="password">
-        <button type="submit">Login</button>
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Username"><br>
+        <input type="password" id="password" placeholder="Password"><br>
+        <input type="submit" value="Login">
     </form>
-</div>
-<div class="box"></div>
-<p id="hello">Hello World</p>
-<script src="script.js"></script>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // フォームのデフォルトの送信を防止
+
+            // ユーザー名とパスワードの取得
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+
+            // ここで適切な認証を行う
+            // この例では、簡単なハードコードされた認証を行っています
+            if (username === "user" && password === "password") {
+                alert("Login successful!");
+                // ログインに成功した場合は、ゲーム画面にリダイレクトする
+                window.location.href = "game.html";
+            } else {
+                alert("Invalid username or password. Please try again.");
+            }
+        });
+    </script>
 </body>
 </html>
