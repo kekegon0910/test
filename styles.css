@@ -19,7 +19,7 @@ body {
 }
 
 .login-text {
-    color: #fff; /* loginの文字色を白に設定 */
+    color: #fff;
 }
 
 input[type="text"],
@@ -37,6 +37,9 @@ button {
 button {
     background-color: #007bff;
     cursor: pointer;
+    margin-left: auto; /* 左側のマージンを自動設定 */
+    margin-right: auto; /* 右側のマージンを自動設定 */
+    display: block; /* 要素をブロック要素に設定して中央揃え */
 }
 
 button:hover {
