@@ -63,6 +63,8 @@ function drawMatrix(matrix, offset) {
 let score = 0;
 let level = 1;
 let speed = 1000; // ミリ秒単位での落下速度
+let block = randomBlock();
+let offset = { x: 0, y: 0 };
 
 function updateScore(linesCleared) {
   score += linesCleared * 10;
@@ -81,9 +83,58 @@ function updateScore(linesCleared) {
 function draw() {
   context.fillStyle = '#f0f0f0';
   context.fillRect(0, 0, canvas.width, canvas.height);
-  const block = randomBlock();
-  drawMatrix(block, {x: 0, y: 0});
+  drawMatrix(block, offset);
 }
+
+function moveBlock(dx, dy) {
+  offset.x += dx;
+  offset.y += dy;
+}
+
+function rotateBlock() {
+  const newBlock = [];
+  for (let y = 0; y < block.length; y++) {
+    newBlock[y] = [];
+    for (let x = 0; x < block[y].length; x++) {
+      newBlock[y][x] = block[block[y].length - x - 1][y];
+    }
+  }
+  block = newBlock;
+}
+
+canvas.addEventListener('touchstart', event => {
+  const touchX = event.touches[0].clientX;
+  const touchY = event.touches[0].clientY;
+  const canvasRect = canvas.getBoundingClientRect();
+  const canvasX = touchX - canvasRect.left;
+  const canvasY = touchY - canvasRect.top;
+  
+  if (canvasX < canvas.width / 2) {
+    moveBlock(-1, 0); // 左に移動
+  } else {
+    moveBlock(1, 0); // 右に移動
+  }
+});
+
+canvas.addEventListener('touchmove', event => {
+  event.preventDefault(); // スクロールを防止
+  
+  const touchX = event.touches[0].clientX;
+  const touchY = event.touches[0].clientY;
+  const canvasRect = canvas.getBoundingClientRect();
+  const canvasX = touchX - canvasRect.left;
+  const canvasY = touchY - canvasRect.top;
+  
+  if (canvasX < canvas.width / 2) {
+    moveBlock(-1, 0); // 左に移動
+  } else {
+    moveBlock(1, 0); // 右に移動
+  }
+});
+
+canvas.addEventListener('touchend', event => {
+  rotateBlock(); // タッチ終了時に回転
+});
 
 setInterval(() => {
   draw();
