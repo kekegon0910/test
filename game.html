@@ -1,18 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Tetris</title>
-  <link rel="stylesheet" type="text/css" href="game.css">
+    <title>Tetris</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+        }
+        #score, #level, #gameOver {
+            text-align: center;
+        }
+        button {
+            display: block;
+            margin: 10px auto;
+        }
+    </style>
 </head>
 <body>
-  <canvas id="tetris" width="240" height="400"></canvas>
-  <div>
-    <p>Score: <span id="score">0</span></p>
-    <p>Level: <span id="level">1</span></p>
-    <p id="game-status"></p>
-  </div>
-  <script src="game.js"></script>
+    <canvas id="tetrisCanvas" width="300" height="600"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="level">Level: 1</div>
+    <div id="gameOver" style="display:none; color:red; font-size:24px;">Game Over</div>
+    <button id="startButton" onclick="startGame()">Start</button>
+    <button id="resetButton" onclick="resetGame()" style="display:none;">Reset</button>
+    <script>
+        const canvas = document.getElementById('tetrisCanvas');
+        const context = canvas.getContext('2d');
+        const scale = 30;
+        const rows = canvas.height / scale;
+        const columns = canvas.width / scale;
+        const emptyColor = 'black';
+
+        // テトリスのブロックの形状と色
+        const blocks = [
+            [[1, 1, 1],
+             [0, 1, 0]],
+
+            [[0, 2, 2],
+             [2, 2, 0]],
+
+            [[3, 3],
+             [3, 3]],
+
+            [[4, 4, 4, 4]],
+
+            [[0, 5, 0],
+             [5, 5, 5]],
+
+            [[6, 0],
+             [6, 6],
+             [0, 6]]
+        ];
+
+        const colors = ['blue', 'red', 'green', 'yellow', 'orange', 'purple', 'cyan'];
+
+        let board = [];
+        let score = 0;
+        let level = 1;
+        let currentBlock;
+        let currentBlockCoords;
+        let currentRotation = 0; // 現在の回転
+        let gameOver = false;
+        let speed = 1000;
+        let gameInterval;
+
+        function createBlock() {
+            const shape = blocks[Math.floor(Math.random() * blocks.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            currentBlock = shape;
+            currentBlockCoords = {
+                x: Math.floor(columns / 2) - Math.floor(currentBlock[0].length / 2),
+                y: 0
+            };
+            currentRotation = 0; // 初期回転
+            if (!isValidMove(0, 0)) {
+                gameOver = true;
+                document.getElementById('gameOver').style.display = 'block';
+                return;
+            }
+            drawBlock(color);
+        }
+
+        function drawBlock(color) {
+            currentBlock.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        drawSquare(currentBlockCoords.x + x, currentBlockCoords.y + y, color);
+                    }
+                });
+            });
+        }
+
+        function drawSquare(x, y, color) {
+            context.fillStyle = color;
+            context.fillRect(x * scale, y * scale, scale, scale);
+            context.strokeStyle = 'black';
+            context.strokeRect(x * scale, y * scale, scale, scale);
+        }
+
+        function draw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            drawBoard();
+            drawBlock(colors[Math.floor(Math.random() * colors.length)]);
+        }
+
+        function drawBoard() {
+            board.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        drawSquare(x, y, colors[cell - 1]);
+                    }
+                });
+            });
+        }
+
+        function moveDown() {
+            if (isValidMove(0, 1)) {
+                currentBlockCoords.y++;
+                draw();
+            } else {
+                placeBlock();
+            }
+        }
+
+        function isValidMove(dx, dy) {
+            for (let y = 0; y < currentBlock.length; y++) {
+                for (let x = 0; x < currentBlock[y].length; x++) {
+                    if (currentBlock[y][x]) {
+                        const nextX = currentBlockCoords.x + x + dx;
+                        const nextY = currentBlockCoords.y + y + dy;
+                        if (nextX < 0 || nextX >= columns || nextY >= rows || board[nextY][nextX]) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        function placeBlock() {
+            currentBlock.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        board[currentBlockCoords.y + y][currentBlockCoords.x + x] = cell;
+                    }
+                });
+            });
+            clearLines();
+            createBlock();
+        }
+
+        function clearLines() {
+            let rowCount = 0;
+            outer: for (let y = board.length - 1; y >= 0; y--) {
+                for (let x = 0; x < board[y].length; x++) {
+                    if (!board[y][x]) {
+                        continue outer;
+                    }
+                }
+                const row = board.splice(y, 1)[0].fill(0);
+                board.unshift(row);
+                rowCount++;
+                y++;
+            }
+            if (rowCount > 0) {
+                score += Math.pow(2, rowCount);
+                document.getElementById('score').innerText = `Score: ${score}`;
+                if (score % 1000 === 0) {
+                    level++;
+                    document.getElementById('level').innerText = `Level: ${level}`;
+                    speed *= 0.8; // 落下スピードを上げる
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(moveDown, speed);
+                }
+            }
+        }
+
+        function rotateBlock() {
+            const rotatedBlock = [];
+            for (let y = 0; y < currentBlock[0].length; y++) {
+                const newRow = [];
+                for (let x = currentBlock.length - 1; x >= 0; x--) {
+                    newRow.push(currentBlock[x][y]);
+                }
+                rotatedBlock.push(newRow);
+            }
+            if (isValidMove(0, 0, rotatedBlock)) {
+                currentBlock = rotatedBlock;
+                draw();
+            }
+        }
+
+        function startGame() {
+            board = Array.from({length: rows}, () => Array(columns).fill(0));
+            score = 0;
+            level = 1;
+            speed = 1000;
+            document.getElementById('score').innerText = `Score: ${score}`;
+            document.getElementById('level').innerText = `Level: ${level}`;
+            document.getElementById('gameOver').style.display = 'none';
+            gameOver = false;
+            createBlock();
+            gameInterval = setInterval(moveDown, speed);
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('resetButton').style.display = 'block';
+        }
+
+        function resetGame() {
+            clearInterval(gameInterval);
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('resetButton').style.display = 'none';
+            document.getElementById('startButton').style.display = 'block';
+        }
+
+        document.addEventListener('keydown', event => {
+            if (gameOver) return;
+            if (event.key === 'ArrowLeft' && isValidMove(-1, 0)) {
+                currentBlockCoords.x--;
+                draw();
+            } else if (event.key === 'ArrowRight' && isValidMove(1, 0)) {
+                currentBlockCoords.x++;
+                draw();
+            } else if (event.key === 'ArrowDown') {
+                moveDown();
+            } else if (event.key === 'ArrowUp') {
+                rotateBlock();
+            }
+        });
+
+    </script>
 </body>
 </html>
