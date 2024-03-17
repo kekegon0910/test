@@ -60,6 +60,33 @@ function drawMatrix(matrix, offset) {
   });
 }
 
+function checkFullLines() {
+  let linesCleared = 0;
+  for (let y = 0; y < canvas.height / scale; y++) {
+    let isFullLine = true;
+    for (let x = 0; x < canvas.width / scale; x++) {
+      if (context.getImageData(x * scale, y * scale, 1, 1).data[3] === 0) {
+        isFullLine = false;
+        break;
+      }
+    }
+    if (isFullLine) {
+      clearLine(y);
+      linesCleared++;
+    }
+  }
+  return linesCleared;
+}
+
+function clearLine(y) {
+  for (let i = y; i > 0; i--) {
+    for (let j = 0; j < canvas.width / scale; j++) {
+      const pixel = context.getImageData(j * scale, (i - 1) * scale, 1, 1);
+      context.putImageData(pixel, j * scale, i * scale);
+    }
+  }
+}
+
 let score = 0;
 let level = 1;
 let speed = 1000; // ミリ秒単位での落下速度
@@ -67,17 +94,8 @@ let block = randomBlock();
 let offset = { x: 0, y: 0 };
 
 function updateScore(linesCleared) {
-  score += linesCleared * 10;
-  if (score >= level * 200) { // クリア難易度を変更
-    level++;
-    speed -= 100; // 落下速度を上げる
-    // Increase difficulty here
-  }
+  score += linesCleared * level * 10; // 消えた行によって与えられる点数を増やす
   document.getElementById('score').innerText = score;
-  document.getElementById('level').innerText = level;
-  if (score >= 300) {
-    document.getElementById('game-status').innerText = 'Game Clear!';
-  }
 }
 
 function draw() {
@@ -102,40 +120,27 @@ function rotateBlock() {
   block = newBlock;
 }
 
-canvas.addEventListener('touchstart', event => {
-  const touchX = event.touches[0].clientX;
-  const touchY = event.touches[0].clientY;
-  const canvasRect = canvas.getBoundingClientRect();
-  const canvasX = touchX - canvasRect.left;
-  const canvasY = touchY - canvasRect.top;
-  
-  if (canvasX < canvas.width / 2) {
-    moveBlock(-1, 0); // 左に移動
-  } else {
-    moveBlock(1, 0); // 右に移動
-  }
-});
+function dropBlock() {
+  moveBlock(0, 1);
+}
 
-canvas.addEventListener('touchmove', event => {
-  event.preventDefault(); // スクロールを防止
-  
-  const touchX = event.touches[0].clientX;
-  const touchY = event.touches[0].clientY;
-  const canvasRect = canvas.getBoundingClientRect();
-  const canvasX = touchX - canvasRect.left;
-  const canvasY = touchY - canvasRect.top;
-  
-  if (canvasX < canvas.width / 2) {
-    moveBlock(-1, 0); // 左に移動
-  } else {
-    moveBlock(1, 0); // 右に移動
+document.addEventListener('keydown', event => {
+  if (event.key === 'ArrowLeft') {
+    moveBlock(-1, 0);
+  } else if (event.key === 'ArrowRight') {
+    moveBlock(1, 0);
+  } else if (event.key === 'ArrowDown') {
+    dropBlock();
+  } else if (event.key === 'ArrowUp') {
+    rotateBlock();
   }
-});
-
-canvas.addEventListener('touchend', event => {
-  rotateBlock(); // タッチ終了時に回転
 });
 
 setInterval(() => {
+  dropBlock();
+  const linesCleared = checkFullLines();
+  if (linesCleared > 0) {
+    updateScore(linesCleared);
+  }
   draw();
 }, speed);
